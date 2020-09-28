@@ -45,21 +45,21 @@ public class Mouse : MonoBehaviour
                     Node hitNode = hit.transform.gameObject.GetComponent<Node>();
                     if (hitNode)
                     {
-                        if(!hitNode.name.StartsWith(SpawnType))
-                        grid.ReplaceNode(hitNode, SpawnType == "DeleteNode" ? "EmptyNode" : SpawnType);
+                        if (!hitNode.name.StartsWith(SpawnType))
+                            grid.ReplaceNode(hitNode, SpawnType == "DeleteNode" ? "EmptyNode" : SpawnType);
 
                         // if (SpawnType == "DeleteNode")
                         // {
-                       // grid.ReplaceNode(hitNode, "EmptyNode");
+                        // grid.ReplaceNode(hitNode, "EmptyNode");
                         //}
-                       // else
+                        // else
                         //{
-                          //  var emptySpacePoint = hit.point + hit.normal * (Grid.GRID_SIZE / 2.0f);
-                          //  if (grid.IsPointWithinGrid(emptySpacePoint))
-                          //  {
-                           //     Node nodeToReplace = grid.GetClosestNodeFromPosition(emptySpacePoint);
-                           //     grid.ReplaceNode(nodeToReplace, SpawnType);
-                          //  }
+                        //  var emptySpacePoint = hit.point + hit.normal * (Grid.GRID_SIZE / 2.0f);
+                        //  if (grid.IsPointWithinGrid(emptySpacePoint))
+                        //  {
+                        //     Node nodeToReplace = grid.GetClosestNodeFromPosition(emptySpacePoint);
+                        //     grid.ReplaceNode(nodeToReplace, SpawnType);
+                        //  }
                         //}
                     }
                 }
@@ -86,7 +86,26 @@ public class Mouse : MonoBehaviour
 
                 }
             }
+            if (SpawnType.EndsWith("Building"))
+            {
+                if (SpawnType != "DeleteBuilding")
+                {
+                    Node hitNode = hit.transform.gameObject.GetComponent<Node>();
+                    if (hitNode)
+                    {
+                        if (hitNode.IsBuildable && Building.CanBuildAtLocation(grid, hitNode, 3, 2))
+                        {
+                            var nodes = Building.GetFootprintNodes(grid, hitNode, 3, 2);
 
+                            foreach (var node in nodes)
+                            {
+                                Destroy(Instantiate(Resources.Load("BuildEffect"), node.transform.position, Quaternion.Euler(0, -180, -180)), 0.5f);
+                            }
+                        }
+                    }
+
+                }
+            }
         }
     }
 

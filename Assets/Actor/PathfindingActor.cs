@@ -84,7 +84,7 @@ public class PathfindingActor : Actor
        // if (inNode.GetType() == typeof(KillNode))
         //    return 9999;
        // return Vector3.Distance(inNode.transform.position, inGoalNode.transform.position);
-        return (inNode.transform.position - inGoalNode.transform.position).magnitude + r.Next(6);
+        return (inNode.transform.position - inGoalNode.transform.position).magnitude + r.Next(6); // + r.Next(6) to add wigglyness)
     }
 
     private int nodeIndex = 0;

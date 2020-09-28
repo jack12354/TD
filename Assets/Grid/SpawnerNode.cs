@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Security.Policy;
 using UnityEngine;
 using Random = System.Random;
 
@@ -12,7 +11,7 @@ public class SpawnerNode : Node
     {
         IsBuildable = false;
         IsPassable = true;
-        SpawnInterval = 1f;
+        SpawnInterval = 0.5f;
     }
 
     public override void OnRemove()

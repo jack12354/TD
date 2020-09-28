@@ -1,22 +1,21 @@
 ﻿using UnityEngine;
 using Random = System.Random;
 
-public class EmptyNode : Node
+public class DeathNode : Node
 {
     public override void OnAdd()
     {
-        IsBuildable = true;
+        IsBuildable = false;
         IsPassable = true;
     }
 
     public override void OnRemove()
     {
         Destroy(gameObject);
-        Debug.LogWarning("You shouldn't be removing EmptyNodes from the grid, but feel free to carry on");
     }
 
     public override void OnEnter(Actor inActor)
     {
-        // Nothing interesting happens...
+        inActor.Die();
     }
 }

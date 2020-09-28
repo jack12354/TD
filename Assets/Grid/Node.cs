@@ -10,6 +10,9 @@ public abstract class Node : MonoBehaviour
 
     [HideInInspector]
     public bool Flagged;
+    [HideInInspector]
+    public int Row, Col;
+
 
     public abstract void OnAdd();
     public abstract void OnRemove();
