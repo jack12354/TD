@@ -9,6 +9,7 @@ using PriorityQueuePair = System.Collections.Generic.KeyValuePair<int, int>;
 
 public class PathfindingActor : Actor
 {
+    public int Wiggliness = 6;
     private List<Node> pathToGoal;
     private Vector3 randomOffset;
 
@@ -17,7 +18,8 @@ public class PathfindingActor : Actor
         float randomAngle = (float)(r.NextDouble() * 360);
         randomOffset = new Vector3(Mathf.Sin(randomAngle) / 4.0f, 0.18f, Mathf.Cos(randomAngle) / 4.0f);
         //  randomOffset = new Vector3((float)((r.NextDouble() * 0.5f) - 0.25f), (float)((r.NextDouble() * 0.5f) - 0.25f));
-        pathToGoal = FindPathToGoalNode(WorldGrid.GetClosestNodeFromPosition(transform.position, true), WorldGrid.GetGoalNode());
+        Node startNode = WorldGrid.GetClosestNodeFromPosition(transform.position, true);
+        pathToGoal = FindPathToGoalNode(startNode, WorldGrid.GetClosestGoalNode(startNode));
         nodeIndex = 0;
         lerp = Vector3.Lerp(Vector3.zero, pathToGoal[nodeIndex].transform.position + randomOffset - transform.position,
             0.05f);
@@ -26,7 +28,7 @@ public class PathfindingActor : Actor
     private List<Node> FindPathToGoalNode(Node inStartNode, Node inGoalNode)
     {
         int expands = 0;
-        List<Node> closedList = new List<Node>();
+        HashSet<Node> closedList = new HashSet<Node>();
         List<KeyValuePair<float, PathPair>> openList = new List<KeyValuePair<float, PathPair>>();
         List<Node> tempList = new List<Node>();
         openList.Add(
@@ -57,6 +59,9 @@ public class PathfindingActor : Actor
                 node.Flagged = true;
             }
 
+            tempList.Remove(currentPath.Last());
+            tempList.RemoveAll(node => !node.IsPassable);
+
             if (!closedList.Contains(currentNode))
                 closedList.Add(currentNode);
 
@@ -66,6 +71,7 @@ public class PathfindingActor : Actor
                 if (node.IsPassable && !closedList.Contains(node))
                 {
                     List<Node> newList = currentPath.ToList();
+                    
                     newList.Add(currentNode);
                     openList.Add(
                         new KeyValuePair<float, PathPair>(
@@ -81,10 +87,12 @@ public class PathfindingActor : Actor
 
     private float Heuristic(Node inNode, Node inGoalNode)
     {
-       // if (inNode.GetType() == typeof(KillNode))
-        //    return 9999;
-       // return Vector3.Distance(inNode.transform.position, inGoalNode.transform.position);
-        return (inNode.transform.position - inGoalNode.transform.position).magnitude + r.Next(6); // + r.Next(6) to add wigglyness)
+        if (inNode.GetType() == typeof(DeathNode))
+            return 9999;
+            //return (float)Math.Pow((inNode.transform.position - WorldGrid.GetClosestGoalNode(inNode).transform.position).magnitude, 2.0f);
+        // return Vector3.Distance(inNode.transform.position, inGoalNode.transform.position);
+        return (inNode.transform.position - WorldGrid.GetClosestGoalNode(inNode).transform.position).magnitude + r.Next(Wiggliness);
+//        return (inNode.transform.position - inGoalNode.transform.position).magnitude + r.Next(6); // + r.Next(6) to add wigglyness)
     }
 
     private int nodeIndex = 0;
@@ -99,8 +107,17 @@ public class PathfindingActor : Actor
         if (nextNode != prevNode)
         {
             nextNode.OnEnter(this);
+            if(!nextNode.IsPassable)
+            {
+                Start();
+            }
         }
 
+
+        if (pathToGoal[nodeIndex] == null || pathToGoal.Count > nodeIndex+1 && pathToGoal[nodeIndex+1] == null)
+        {
+            Start();
+        }
         Vector3 directionToTarget = (pathToGoal[nodeIndex].transform.position + randomOffset) - transform.position;
         float dSqrToTarget = directionToTarget.sqrMagnitude;
         if (dSqrToTarget < 0.25f)
@@ -117,6 +134,14 @@ public class PathfindingActor : Actor
         }
 
         transform.position = nextPosition;
+    }
+
+    public void PathfindIfNecessary(Node inChangedNode)
+    {
+        if (pathToGoal.Contains(inChangedNode))
+        {
+            Start();
+        }
     }
 
     public override void OnAdd(Grid inGrid, Node inAtNode)
@@ -144,6 +169,7 @@ public class PathfindingActor : Actor
     void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;
+        if (pathToGoal[nodeIndex] != null)
         Gizmos.DrawLine(transform.position, pathToGoal[nodeIndex].transform.position + randomOffset);
 
         Gizmos.color = Color.green;
@@ -152,7 +178,8 @@ public class PathfindingActor : Actor
         {
             //float colorVal = pathToGoal[iter].Parent.GetNodeCoordinates(pathToGoal[iter]).z * percent;
             //Gizmos.color = new Color(colorVal, colorVal, colorVal);
-            Gizmos.DrawLine(pathToGoal[iter].transform.position + randomOffset, pathToGoal[iter + 1].transform.position + randomOffset);
+            if(pathToGoal[iter] != null && pathToGoal[iter+1] != null)
+                Gizmos.DrawLine(pathToGoal[iter].transform.position + randomOffset, pathToGoal[iter + 1].transform.position + randomOffset);
         }
     }
 }

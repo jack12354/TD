@@ -18,13 +18,14 @@ public class Grid : MonoBehaviour
         {'s', "SpawnNode"},
         {'w', "WallNode"},
         {'g', "GoalNode"},
-        {'x', "KillNode"}
+        {'x', "DeathNode"},
+        {'?', "RandomNode" }
     };
 
     // Use this for initialization
     void Start()
     {
-        Load("simpleworld");
+        Load("flatworld");
     }
 
     // Update is called once per frame
@@ -53,6 +54,19 @@ public class Grid : MonoBehaviour
 
     private Node AddNode(string inNodeType, int inRow, int inCol)
     {
+        if(inNodeType == "RandomNode")
+        {
+            double random = Random.value;
+                 
+             if (random < 0.05)
+                inNodeType = "DeathNode";
+            else if (random < 0.25)
+            
+                inNodeType = "WallNode";
+       
+            else
+                inNodeType = "EmptyNode";
+        }
         mGrid[inRow, inCol] = ((GameObject)Instantiate(Resources.Load(inNodeType))).GetComponent<Node>();
         mGrid[inRow, inCol].OnAdd();
         mGrid[inRow, inCol].Parent = this;
@@ -62,10 +76,6 @@ public class Grid : MonoBehaviour
         mGrid[inRow, inCol].Row = inRow;
         mGrid[inRow, inCol].Col = inCol;
 
-        foreach (PathfindingActor actor in GetAllActorsOfType<PathfindingActor>())
-        {
-            actor.Start();
-        }
         return mGrid[inRow, inCol];
     }
 
@@ -212,11 +222,12 @@ public class Grid : MonoBehaviour
 
     public void AddBuildingAtPoint(string inActorType, Vector3 inMousePosition)
     {
+        var atNode = GetClosestNodeFromPosition(inMousePosition);
         Building building = ((GameObject)Instantiate(Resources.Load(inActorType))).GetComponent<Building>();
-        if (Building.CanBuildAtLocation(this, GetClosestNodeFromPosition(inMousePosition),
+        if (Building.CanBuildAtLocation(this, atNode,
             building.XDimension, building.YDimension))
         {
-            building.OnAdd(this, GetClosestNodeFromPosition(inMousePosition));
+            building.OnAdd(this, atNode);
             mActors.Add(building);
         }
         else
@@ -230,6 +241,26 @@ public class Grid : MonoBehaviour
     public List<Node> GetGoalNodes()
     {
         return mGrid.Cast<Node>().Where(node => node.GetType() == typeof(GoalNode)).ToList();
+    }
+
+    public Node GetClosestGoalNode(Node inNode)
+    {
+        var allGoals = GetGoalNodes();
+
+        Node bestNode = null;
+        float closestDistanceSqr = Mathf.Infinity;
+        foreach (var node in allGoals)
+        {
+            Vector3 directionToTarget = node.transform.position - inNode.transform.position;
+            float dSqrToTarget = directionToTarget.sqrMagnitude;
+            if (dSqrToTarget < closestDistanceSqr)
+            {
+                closestDistanceSqr = dSqrToTarget;
+                bestNode = node;
+            }
+
+        }
+        return bestNode;
     }
     
     void OnDrawGizmos()

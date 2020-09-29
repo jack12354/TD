@@ -5,13 +5,12 @@ using Random = System.Random;
 public class SpawnerNode : Node
 {
     private string ActorToSpawn;
-    private float SpawnInterval;
+    public float SpawnInterval = 0.5f;
 
     public override void OnAdd()
     {
         IsBuildable = false;
         IsPassable = true;
-        SpawnInterval = 0.5f;
     }
 
     public override void OnRemove()
